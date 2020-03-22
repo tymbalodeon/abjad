@@ -51,4 +51,61 @@ literal = abjad.LilyPondLiteral(r"\voiceTwo")
 abjad.attach(literal, container["Lower_Staff_Voice_II"])
 container["Lower_Staff_Voice_II"].append("g2")
 lower_staff.append(container)
+
+upper_staff_leaves = abjad.select(upper_staff).leaves()
+
+# len(upper_staff_leaves)
+
+lower_staff_voice_2_leaves = []
+for leaf in abjad.select(lower_staff).leaves():
+    voice = abjad.inspect(leaf).parentage().get(abjad.Voice)
+    if voice.name == "Lower_Staff_Voice_II":
+        lower_staff_voice_2_leaves.append(leaf)
+
+# len(lower_staff_voice_2_leaves)
+
+lower_staff_voice_1_leaves = []
+for leaf in abjad.select(lower_staff).leaves():
+    voice = abjad.inspect(leaf).parentage().get(abjad.Voice)
+    if voice.name == "Lower_Staff_Voice_I":
+        lower_staff_voice_1_leaves.append(leaf)
+
+# len(lower_staff_voice_1_leaves)
+
+clef = abjad.Clef("bass")
+leaf = lower_staff_voice_2_leaves[0]
+abjad.attach(clef, leaf)
+bar_line = score.add_final_bar_line()
+
+abjad.attach(abjad.Dynamic("pp"), upper_staff_leaves[0])
+abjad.attach(abjad.Dynamic("mp"), upper_staff_leaves[5])
+abjad.attach(abjad.Dynamic("pp"), lower_staff_voice_2_leaves[1])
+abjad.attach(abjad.Dynamic("mp"), lower_staff_voice_2_leaves[6])
+abjad.override(upper_staff).dynamic_line_spanner.staff_padding = 2
+abjad.override(lower_staff).dynamic_line_spanner.staff_padding = 3
+
+abjad.beam(upper_staff_leaves[:4])
+abjad.beam(lower_staff_voice_2_leaves[1:5])
+abjad.beam(lower_staff_voice_2_leaves[6:10])
+
+abjad.slur(upper_staff_leaves[:5])
+abjad.slur(upper_staff_leaves[5:])
+abjad.slur(lower_staff_voice_2_leaves[1:6])
+abjad.slur(lower_staff_voice_2_leaves[-10:])
+leaf = lower_staff_voice_2_leaves[-10]
+abjad.override(leaf).slur.direction = abjad.Down
+
+abjad.hairpin("< !", upper_staff_leaves[-7:-2])
+abjad.hairpin("> !", upper_staff_leaves[-2:])
+leaf = upper_staff_leaves[-2]
+abjad.override(leaf).hairpin.to_barline = False
+
+markup = abjad.Markup("ritard.")
+start_text_span = abjad.StartTextSpan(left_text=markup)
+abjad.text_spanner(upper_staff_leaves[-7:], start_text_span=start_text_span)
+abjad.override(upper_staff_leaves[-7]).text_spanner.staff_padding = 2
+
+abjad.tie(upper_staff_leaves[-2:])
+abjad.tie(lower_staff_voice_1_leaves)
+
 abjad.show(score)
